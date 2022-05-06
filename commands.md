@@ -68,6 +68,19 @@ cardano-cli transaction build-raw \
  --out-file matx.raw
 ```
 
+### Transaction build (no Raw)
+This one that calculates the fee, so the output is alreade an `.unsigned` file rather than an `.raw`
+
+```bash
+cardano-cli transaction build \
+--alonzo-era \
+--tx-in $txhash#$txix  \
+--tx-out $address+$output \
+--change-address $MYADDR \
+--out-file matx.unsigned \
+$TESTNET
+```
+
 ### Calculating fees
 ```bash
 export fee=$(cardano-cli transaction calculate-min-fee --tx-body-file matx.raw --tx-in-count 1 --tx-out-count 1 --witness-count 1 $TESTNET --protocol-params-file protocol.json | cut -d " " -f1)
