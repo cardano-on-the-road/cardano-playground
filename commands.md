@@ -38,6 +38,13 @@ cardano-cli address build \
     $TESTNET
 ```
 
+#### Hashing public key
+```bash
+cardano-cli address key-hash \
+    --payment-verification-key-file payment.vkey \
+    --out-file payment.hkey 
+```
+
 ```bash
 cardano-cli query utxo \
     --address $(cat payment.addr) \
@@ -113,3 +120,4 @@ $TESTNET --tx-body-file matx.raw  \
 ```bash
 cardano-cli transaction submit --tx-file matx.signed $TESTNET
 ```
+
