@@ -5,8 +5,8 @@
 #### Hashing public key
 ```bash
 cardano-cli address key-hash \
-    --payment-verification-key-file payment.vkey \
-    --out-file payment.hkey 
+    --payment-verification-key-file payment1.vkey \
+    --out-file payment1.hkey 
 ```
 
 #### 1) Multi-signature script file
@@ -32,87 +32,85 @@ filename best practice: `multisignaturepolicy.script`
 }
 ```
 
+cardano-cli query utxo \
+    --address $(cat multisig.addr) \
+    --testnet-magic=$MAGIC
+
 #### 2. Create the address
 ```bash
 cardano-cli address build \
---payment-script-file multisignaturepolicy.script \
-$TESTNET \
+--payment-script-file multisig.script \
+--testnet-magic=$MAGIC \
 --out-file multisig.addr
+```
+
+```
+cardano-cli address build \
+--payment-script-file ${POLICY_PATH}/policy.script \
+--stake-verification-key-file ${KEYS_PATH}/stake.vkey \
+${CARDANO_NET_PREFIX} \
+--out-file ${ADDRESSES_PATH}/script-with-stake.addr
 ```
 
 ```bash
 export fee=0
 export amount=100000000
 export output=10000000
-export txhash="74751b1321908c55effc40384be061c6cc8872e932fd55dc2edc450fea7c5612"
+export txhash="4a5d4091600a8ea3eac1c3cde32d99c4514541888b071007a69ccdcf6dfab639"
 export txix=0
 export address=$TARGADDR
 export changeAddr=$(< multisig.addr)
 ```
 
-### Raw transaction
-```bash
-cardano-cli transaction build-raw \
- --fee $fee \
- --tx-in $txhash#$txix \
- --tx-out $address+$output \
- --tx-out $changeAddr+$amount \
- --metadata-json-file metadata.json \
- --out-file multisigtx.raw
-```
+### Transaction build
+cardano-cli transaction build \
+--tx-in $txhash#$txix  \
+--tx-out $DSTADDR+$output \
+--change-address $SRCADDR \
+--tx-in-script-file multisig.script \
+--witness-override 3 \
+--metadata-json-file metadata.json \
+--out-file multisigtx.unsigned \
+--testnet-magic=$MAGIC
 
-### Calculating fees
-```bash
-export fee=$(cardano-cli transaction calculate-min-fee --tx-body-file matx.raw --tx-in-count 1 --tx-out-count 2 --witness-count 3 $TESTNET --protocol-params-file protocol.json | cut -d " " -f1)
-```
 
-### calculating rest
-```bash
-export changeAmount=$(expr $amount - $output - $fee)
-```
-
-```bash
-cardano-cli transaction build-raw \
- --fee $fee \
- --tx-in $txhash#$txix \
- --tx-out $address+$output \
- --tx-out $changeAddr+$changeAmount \
- --metadata-json-file metadata.json \
- --out-file multisigtx.raw
-```
 
 #### Witnessing
 One file for each witness
 
+
 ```bash
 cardano-cli transaction witness \
---signing-key-file payment.skey \
+--signing-key-file payment1.skey \
 --tx-body-file multisigtx.unsigned \
---out-file payment.witness
+--out-file payment1.witness
 ```
 
 ```bash
 cardano-cli transaction witness \
---signing-key-file verifier1.skey \
---tx-body-file multisigtx.unsigned\
---out-file verifier1.witness
+--signing-key-file payment2.skey \
+--tx-body-file multisigtx.unsigned \
+--out-file payment2.witness
 ```
 
 ```bash
 cardano-cli transaction witness \
---signing-key-file verifier2.skey \
---tx-body-file multisigtx.unsigned\
---out-file verifier2.witness
+--signing-key-file payment3.skey \
+--tx-body-file multisigtx.unsigned \
+--out-file payment3.witness
 ```
 
 #### Assembling the transaction
 cardano-cli transaction assemble \
 --tx-body-file multisigtx.unsigned \
---witness-file payment.witness \
---witness-file verifier1.witness \
---witness-file verifier2.witness \
+--witness-file payment1.witness \
+--witness-file payment2.witness \
+--witness-file payment3.witness \
 --out-file multisigtx.signed
 
 #### Submitting
-cardano-cli transaction submit $TESTNET --tx-file multisigtx.signed
+cardano-cli transaction submit --testnet-magic=$MAGIC --tx-file multisigtx.signed
+
+
+# Transaction from 2 different address
 

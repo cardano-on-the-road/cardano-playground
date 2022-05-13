@@ -53,7 +53,10 @@ cardano-cli query utxo \
 
 ## Transactions
 
+Download protocol file
+```bash
 cardano-cli query protocol-parameters $TESTNET --out-file protocol.json
+```
 
 ### Setting variables
 ```bash
