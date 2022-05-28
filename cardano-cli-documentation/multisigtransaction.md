@@ -1,4 +1,4 @@
-# Multi-signature
+# Multi-signature transaction
 
 
 
@@ -97,7 +97,7 @@ cardano-cli transaction witness \
 cardano-cli transaction witness \
 --signing-key-file payment3.skey \
 --tx-body-file multisigtx.unsigned \
---out-file payment3.witness
+--out-file payment3.witnesss
 ```
 
 #### Assembling the transaction
@@ -113,4 +113,6 @@ cardano-cli transaction submit --testnet-magic=$MAGIC --tx-file multisigtx.signe
 
 
 # Transaction from 2 different address
+
+
 

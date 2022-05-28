@@ -1,0 +1,76 @@
+
+### Key generation
+```bash
+cardano-cli address key-gen \
+--verification-key-file default.vkey \
+--signing-key-file default.skey
+```
+
+### Address generation
+```bash
+cardano-cli address build \
+    --payment-verification-key-file default.vkey \
+    --out-file default.addr \
+    --testnet-magic=$MAGIC
+```
+
+### Verify found on the address
+```bash
+cardano-cli query utxo \
+    --address $(cat default.addr) \
+    --testnet-magic=$MAGIC
+```
+
+### Create simple policy script
+```bash
+echo "{" >> policy/policy.script 
+echo "  \"keyHash\": \"$(cardano-cli address key-hash --payment-verification-key-file policy/policy.vkey)\"," >> policy/policy.script 
+echo "  \"type\": \"sig\"" >> policy/policy.script 
+echo "}" >> policy/policy.script
+```
+
+###
+```bash
+cardano-cli transaction policyid --script-file ./policy/policy.script >> policy/policyID
+```
+
+
+### Init variable
+```bash 
+export txhash=""
+export txix="0"
+export funds="insert Amount here"
+export outAddress=""
+export changeAddress=""
+export policyid=$(cat policy/policyID)
+export tokenname="76616c656d7267"
+export tokenamount="100000000"
+export outAmount="10000000"
+```
+
+### Build transaction
+```bash
+cardano-cli transaction build \
+ --witness-override 2 \
+ --tx-in $txhash#$txix \
+ --tx-out $outAddress+$outAmount+"$tokenamount $policyid.$tokenname" \
+ --mint="$tokenamount $policyid.$tokenname" \
+ --change-address $outAddress \
+ --mint-script-file policy/policy.script \
+ --out-file tmpTx/matx.raw \
+ --testnet-magic=$MAGIC
+```
+
+### Signing transaction
+```bash
+cardano-cli transaction sign  \
+--signing-key-file default.skey  \
+--signing-key-file policy/policy.skey  \
+--testnet-magic $MAGIC --tx-body-file tmpTx/matx.raw \
+--out-file tmpTx/matx.signed
+```
+
+### Submit transaction
+```bash
+cardano-cli transaction submit --tx-file tmpTx/matx.signed --testnet-magic=$MAGIC
+```

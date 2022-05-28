@@ -119,6 +119,7 @@ $TESTNET --tx-body-file matx.raw  \
 --out-file matx.signed
 ```
 
+
 ### Submitting transaction
 ```bash
 cardano-cli transaction submit --tx-file matx.signed $TESTNET
